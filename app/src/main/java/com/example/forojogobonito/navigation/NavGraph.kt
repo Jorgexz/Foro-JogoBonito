@@ -34,6 +34,11 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreenAdaptativaWrapper(navController)
         }
 
+        composable("modo") {
+            ModoEspecialScreen()
+        }
+
+
 
 
 
