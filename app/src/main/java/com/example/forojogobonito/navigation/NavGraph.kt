@@ -24,7 +24,7 @@ fun AppNavGraph(navController: NavHostController) {
             )
         }
 
-        // Registro  (pásale el navController)
+        // Registro
         composable(AppNavigation.Registro.route) {
             RegistroScreen(navController = navController)
         }
@@ -34,21 +34,23 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreenAdaptativaWrapper(navController)
         }
 
+        // Modo especial
         composable("modo") {
             ModoEspecialScreen()
         }
 
-
-
-
-
+        // Perfil (cámara / galería)
+        composable("perfil") {
+            PerfilScreen()
+        }
     }
 }
 
-// Wrapper para inyectar el onLogout hacia la Home adaptativa
+// ✅ Wrapper corregido
 @Composable
 fun HomeScreenAdaptativaWrapper(navController: NavHostController) {
     HomeScreenAdaptativaWithLogout(
+        navController = navController, // ← este parámetro faltaba
         onLogout = {
             navController.navigate(AppNavigation.Login.route) {
                 popUpTo(AppNavigation.Home.route) { inclusive = true }

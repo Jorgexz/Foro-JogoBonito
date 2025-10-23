@@ -103,6 +103,14 @@ fun PantallaCuenta(
         ) {
             Text("Ir al modo especial")
         }
+
+        Button(
+            onClick = { navController.navigate("perfil") },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text("Editar foto de perfil")
+        }
+
     }
 }
 

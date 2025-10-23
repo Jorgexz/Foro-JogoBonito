@@ -76,7 +76,8 @@ fun RegistroScreen(
             Button(
                 onClick = {
                     if (usuarioViewModel.validarFormulario()) {
-                        navController.navigate(AppNavigation.Resumen.route)
+                        navController.navigate("perfil")
+
                     }
                 },
                 enabled = uiState.aceptaTerminos

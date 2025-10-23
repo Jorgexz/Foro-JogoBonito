@@ -22,6 +22,35 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+
     </application>
+
+    <!-- Cámara -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Declaramos la cámara como opcional para evitar advertencias -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+
+    <!-- Lectura de imágenes (Android 13+ / API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Compatibilidad para Android 12 o menor -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
 
 </manifest>
