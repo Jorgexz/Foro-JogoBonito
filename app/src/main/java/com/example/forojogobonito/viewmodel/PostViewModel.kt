@@ -1,28 +1,61 @@
 package com.example.forojogobonito.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.ViewModel
-import com.example.forojogobonito.model.Post
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.forojogobonito.data.AppDatabase
+import com.example.forojogobonito.data.Post
 import com.example.forojogobonito.repository.PostRepository
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class PostViewModel : ViewModel() {
+import java.time.LocalDate
 
-    // Lista observable de posts para Compose
-    private val _posts = mutableStateListOf<Post>().apply {
-        addAll(PostRepository.obtenerPosts())
-    }
-    val posts: List<Post> get() = _posts
+class PostViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Función para agregar un post nuevo
-    fun agregarPost(titulo: String, contenido: String, autorId: String) {
-        val nuevoPost = Post(
-            id = (_posts.size + 1).toString(), // id simple incremental
-            titulo = titulo,
-            contenido = contenido,
-            autorId = autorId,
-            fechaPublicacion = "2025-10-13" // puedes usar la fecha actual más adelante
+    private val repository: PostRepository
+
+    val posts: StateFlow<List<Post>>
+
+    init {
+        val dao = AppDatabase.getDatabase(application).postDao()
+        repository = PostRepository(dao)
+        posts = repository.posts.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
-        PostRepository.agregarPost(nuevoPost)
-        _posts.add(nuevoPost)
+    }
+
+    fun agregarPost(titulo: String, contenido: String, autor: String, categoria: String) {
+        viewModelScope.launch {
+            val fecha = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val nuevoPost = Post(
+                titulo = titulo,
+                contenido = contenido,
+                autor = autor,
+                categoria = categoria,
+                fecha = fecha
+            )
+            repository.insertar(nuevoPost)
+        }
+    }
+
+
+    fun eliminarPost(post: Post) {
+        viewModelScope.launch {
+            repository.eliminar(post)
+        }
+    }
+
+    fun actualizarPost(post: Post) {
+        viewModelScope.launch {
+            repository.actualizar(post)
+        }
     }
 }

@@ -34,23 +34,31 @@ fun AppNavGraph(navController: NavHostController) {
             HomeScreenAdaptativaWrapper(navController)
         }
 
-        // Modo especial
-        composable("modo") {
-            ModoEspecialScreen()
+
+
+        // Partidos
+        composable(AppNavigation.Partidos.route) {
+            PartidosScreen()
         }
 
-        // Perfil (cámara / galería)
-        composable("perfil") {
-            PerfilScreen()
+
+        // ✅ PERFIL (LEGACY) → redirigido a la pantalla estable con permiso persistente
+        composable(AppNavigation.Perfil.route) {
+            PerfilResumenScreen(navController = navController)
+        }
+
+        // ✅ PERFIL (NUEVA RUTA) → misma pantalla estable
+        composable(AppNavigation.PerfilResumen.route) {
+            PerfilResumenScreen(navController = navController)
         }
     }
 }
 
-// ✅ Wrapper corregido
+// Wrapper ya corregido en tu versión; lo dejo igual
 @Composable
 fun HomeScreenAdaptativaWrapper(navController: NavHostController) {
     HomeScreenAdaptativaWithLogout(
-        navController = navController, // ← este parámetro faltaba
+        navController = navController,
         onLogout = {
             navController.navigate(AppNavigation.Login.route) {
                 popUpTo(AppNavigation.Home.route) { inclusive = true }

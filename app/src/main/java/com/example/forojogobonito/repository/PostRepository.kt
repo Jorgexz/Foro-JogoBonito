@@ -1,16 +1,16 @@
 package com.example.forojogobonito.repository
 
-import com.example.forojogobonito.model.Post
+import com.example.forojogobonito.data.Post
+import com.example.forojogobonito.data.PostDao
+import kotlinx.coroutines.flow.Flow
 
-// Singleton que simula la base de datos de posts
-object PostRepository {
-    private val posts = mutableListOf<Post>()
+class PostRepository(private val postDao: PostDao) {
 
-    // Retorna todos los posts
-    fun obtenerPosts(): List<Post> = posts
+    val posts: Flow<List<Post>> = postDao.obtenerPosts()
 
-    // Agrega un nuevo post
-    fun agregarPost(post: Post) {
-        posts.add(post)
-    }
+    suspend fun insertar(post: Post) = postDao.insertarPost(post)
+
+    suspend fun actualizar(post: Post) = postDao.actualizarPost(post)
+
+    suspend fun eliminar(post: Post) = postDao.eliminarPost(post)
 }

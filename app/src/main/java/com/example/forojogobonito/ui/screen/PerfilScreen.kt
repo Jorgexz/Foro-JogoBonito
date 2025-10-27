@@ -8,36 +8,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.forojogobonito.ui.components.ImagenInteligente
 import com.example.forojogobonito.viewmodel.PerfilViewModel
-import java.io.File
+import com.example.forojogobonito.navigation.AppNavigation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PerfilScreen(viewModel: PerfilViewModel = viewModel()) {
+fun PerfilScreen(
+    navController: NavController,
+    viewModel: PerfilViewModel = viewModel()
+) {
     val imagenUri by viewModel.imagenUri.collectAsState()
 
-    val contexto = LocalContext.current
-    val uriTemporal = remember { mutableStateOf<Uri?>(null) }
 
-    // Launcher para abrir la galería
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri ->
+    ) { uri: Uri? ->
         viewModel.actualizarDesdeGaleria(uri)
-    }
-
-    // Launcher para abrir la cámara
-    val camaraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { exito ->
-        if (exito) {
-            viewModel.actualizarDesdeCamara(uriTemporal.value)
-        }
     }
 
     Scaffold(
@@ -51,26 +41,29 @@ fun PerfilScreen(viewModel: PerfilViewModel = viewModel()) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+
             ImagenInteligente(uri = imagenUri)
             Spacer(Modifier.height(20.dp))
 
+            // 🔹 Botón para abrir galería
             Button(onClick = { galeriaLauncher.launch("image/*") }) {
                 Text("Seleccionar desde galería")
             }
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(20.dp))
 
-            Button(onClick = {
-                val archivo = File.createTempFile("foto", ".jpg", contexto.cacheDir)
-                val uri = FileProvider.getUriForFile(
-                    contexto,
-                    "${contexto.packageName}.provider",
-                    archivo
-                )
-                uriTemporal.value = uri
-                camaraLauncher.launch(uri)
-            }) {
-                Text("Tomar foto con cámara")
+
+            Button(
+                onClick = {
+
+                    navController.navigate(AppNavigation.Home.route) {
+                        popUpTo(AppNavigation.Registro.route) { inclusive = true }
+                    }
+                },
+                enabled = imagenUri != null,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Guardar perfil")
             }
         }
     }

@@ -10,23 +10,29 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.forojogobonito.navigation.AppNavGraph
 import com.example.forojogobonito.ui.theme.ForoJogoBonitoTheme
-import com.example.forojogobonito.utils.ProvideActivity   // ← IMPORTA ESTO
+import com.example.forojogobonito.utils.ProvideActivity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             ForoJogoBonitoTheme {
-                ProvideActivity {                        // ← ENVUELVE AQUÍ
+                ProvideActivity {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
                         val navController = rememberNavController()
                         AppNavGraph(navController)
+
                     }
                 }
+
             }
+
         }
+
+
     }
 }

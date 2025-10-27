@@ -30,9 +30,13 @@ fun ResumenScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Text("👤 Nombre: ${uiState.nombre}")
-            Text("📧 Correo: ${uiState.correo}")
-            Text("🏠 Dirección: ${uiState.direccion}")
+            // dentro de Column { ... }
+            Text("Nombre: ${uiState.nombre}")
+            Divider()
+            Text("Correo: ${uiState.correo}")
+            Divider()
+            Text("Edad: ${uiState.edad.ifBlank { "—" }}")
+
             Spacer(Modifier.height(32.dp))
 
             Button(

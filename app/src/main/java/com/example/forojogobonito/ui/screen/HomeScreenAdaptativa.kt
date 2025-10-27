@@ -13,9 +13,9 @@ fun HomeScreenAdaptativaWithLogout(
     val windowSizeClass = obtenerWindowSizeClass()
 
     when (windowSizeClass.widthSizeClass) {
-        WindowWidthSizeClass.Compact -> HomeScreenCompact(navController, onLogout)
+        WindowWidthSizeClass.Compact -> HomeScreenCompact(navController)
         WindowWidthSizeClass.Medium -> HomeScreenMedium()
         WindowWidthSizeClass.Expanded -> HomeScreenExpanded()
-        else -> HomeScreenCompact(navController, onLogout)
+        else -> HomeScreenCompact(navController)
     }
 }

@@ -2,6 +2,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Cámara -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Declaramos la cámara como opcional para evitar advertencias -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+
+
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -36,21 +54,12 @@
 
     </application>
 
-    <!-- Cámara -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Declaramos la cámara como opcional para evitar advertencias -->
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
 
 
-    <!-- Lectura de imágenes (Android 13+ / API 33+) -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
-    <!-- Compatibilidad para Android 12 o menor -->
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
+
+
+
 
 
 </manifest>
