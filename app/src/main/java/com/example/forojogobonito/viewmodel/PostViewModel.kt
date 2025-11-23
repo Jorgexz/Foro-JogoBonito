@@ -58,7 +58,7 @@ class PostViewModel(
         viewModelScope.launch {
             try {
                 post.id?.let { idPost ->
-                    // Enviamos mi ID para demostrar que soy el dueño
+                    //enviamos mi ID para demostrar que soy el dueño
                     repository.eliminarPost(idPost, usuarioIdActual)
                     cargarPosts()
                 }
@@ -67,5 +67,21 @@ class PostViewModel(
             }
         }
     }
+
+    fun editarPost(postEditado: Post) {
+        viewModelScope.launch {
+            try {
+                println("ENVIANDO EDICION A AWS: $postEditado") // Log antes
+                repository.editarPost(postEditado)
+                println("EDICION EXITOSA") // Log éxito
+                cargarPosts()
+            } catch (e: Exception) {
+                //Logcat
+                println("ERROR AL EDITAR: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
 }
 

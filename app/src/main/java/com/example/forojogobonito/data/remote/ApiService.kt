@@ -21,6 +21,12 @@ interface ApiService {
         @Query("userId") userId: Int
     ): Response<Unit>
 
+    @PUT("posts/{id}")
+    suspend fun editarPost(
+        @Path("id") id: Int,
+        @Body post: Post
+    ): Response<Unit>
+
 
     //Usuarios
     @POST("usuarios/login")

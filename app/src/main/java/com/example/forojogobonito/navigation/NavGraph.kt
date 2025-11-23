@@ -36,9 +36,8 @@ fun AppNavGraph(navController: NavHostController) {
 
 
 
-        // Partidos
         composable(AppNavigation.Partidos.route) {
-            PartidosScreen()
+            PartidosScreen(navController)
         }
 
 

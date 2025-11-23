@@ -6,6 +6,5 @@ sealed class AppNavigation(val route: String) {
     object Home : AppNavigation("home")
     object Perfil : AppNavigation("perfil")
     object PerfilResumen : AppNavigation("perfil_resumen")
-
-    object Partidos : AppNavigation("partidos")
+    object Partidos : AppNavigation("partidos_screen")
 }

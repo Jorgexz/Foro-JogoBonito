@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.example.forojogobonito.model.Post // 👈 Asegúrate de importar tu modelo Post
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -13,13 +13,15 @@ import java.util.*
 @Composable
 fun AgregarPostDialog(
     onDismiss: () -> Unit,
-    // 👇 ya no pedimos "autor" aquí
-    onAddPost: (titulo: String, contenido: String, categoria: String, fecha: String) -> Unit
+    onAddPost: (titulo: String, contenido: String, categoria: String, fecha: String) -> Unit,
+    postAEditar: Post? = null
 ) {
-    var titulo by remember { mutableStateOf(TextFieldValue("")) }
-    var contenido by remember { mutableStateOf(TextFieldValue("")) }
-    var categoria by remember { mutableStateOf(TextFieldValue("")) }
+    //Inicializamos, si hay postAEditar, usamos sus datos; si no, cadena vacía.
+    var titulo by remember { mutableStateOf(postAEditar?.titulo ?: "") }
+    var contenido by remember { mutableStateOf(postAEditar?.contenido ?: "") }
+    var categoria by remember { mutableStateOf(postAEditar?.categoria ?: "") }
 
+    //Generamos la fecha actual
     val fecha = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
     AlertDialog(
@@ -27,18 +29,24 @@ fun AgregarPostDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (titulo.text.isNotBlank() &&
-                        contenido.text.isNotBlank() &&
-                        categoria.text.isNotBlank()
-                    ) {
-                        onAddPost(titulo.text, contenido.text, categoria.text, fecha)
+                    if (titulo.isNotBlank() && contenido.isNotBlank() && categoria.isNotBlank()) {
+                        //Enviamos los datos a HomeScreen
+                        onAddPost(titulo, contenido, categoria, fecha)
                         onDismiss()
                     }
                 }
-            ) { Text("Publicar") }
+            ) {
+
+                Text(if (postAEditar != null) "Guardar Cambios" else "Publicar")
+            }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
-        title = { Text("Nueva publicación") },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+
+        title = {
+            Text(if (postAEditar != null) "Editar Publicación" else "Nueva Publicación")
+        },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
@@ -52,7 +60,8 @@ fun AgregarPostDialog(
                     value = contenido,
                     onValueChange = { contenido = it },
                     label = { Text("Contenido") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 5 // Un poco más de espacio para escribir
                 )
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(

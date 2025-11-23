@@ -10,15 +10,24 @@ class PostRepository {
     }
 
     suspend fun crearPost(post: Post): Post {
-        // El post ya viene con el usuario_id dentro desde el ViewModel
+        //el post ya viene con el usuario_id dentro desde el ViewModel
         return RetrofitInstance.api.crearPost(post)
     }
 
-    // AHORA RECIBE 2 IDs: El del post y el del usuario que quiere borrar
+    //recibe 2 ids, del post y el del usuario que quiere borrar
     suspend fun eliminarPost(idPost: Int, idUsuario: Int) {
         val response = RetrofitInstance.api.eliminarPost(idPost, idUsuario)
         if (!response.isSuccessful) {
             throw Exception("Error al borrar: ${response.code()} (Posiblemente no eres el dueño)")
         }
     }
+
+    suspend fun editarPost(post: Post) {
+        //el post ya debe traer el ID y el usuario_id actualizados
+        post.id?.let { id ->
+            val response = RetrofitInstance.api.editarPost(id, post)
+            if (!response.isSuccessful) throw Exception("Error al editar")
+        }
+    }
+
 }

@@ -42,16 +42,19 @@ fun HomeScreenCompact(navController: NavController) {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
-    //Obtenemos ViewModel de Usuario
+    //obtenemos ViewModel de Usuario
     val usuarioViewModel: UsuarioViewModel = viewModel(activity)
-
-    //DATOS DEL USUARIO LOGUEADO
+    //datos usuario ya logueado
     val usuarioActual = usuarioViewModel.usuarioActual
 
     val postViewModel: PostViewModel = viewModel()
     val posts by postViewModel.posts.collectAsState()
 
+    //estados UI
     var mostrarDialogo by remember { mutableStateOf(false) }
+
+    var postParaEditar by remember { mutableStateOf<Post?>(null) }
+
     var publicadoOk by remember { mutableStateOf(false) }
     var fabExpandido by remember { mutableStateOf(false) }
     val rot by animateFloatAsState(if (fabExpandido) 45f else 0f, label = "fab-rotation")
@@ -156,6 +159,7 @@ fun HomeScreenCompact(navController: NavController) {
                 onClick = {
                     fabExpandido = !fabExpandido
                     mostrarDialogo = true
+                    postParaEditar = null // Aseguramos que es un post NUEVO
                 }
             ) {
                 Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.rotate(rot))
@@ -174,7 +178,7 @@ fun HomeScreenCompact(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             ) {
                 Text(
-                    "¡Publicación creada!",
+                    "¡Operación exitosa!",
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -210,12 +214,16 @@ fun HomeScreenCompact(navController: NavController) {
                             PostCard(
                                 post = post,
                                 onDelete = {
-                                    //Solo enviamos la orden si tenemos usuario válido
                                     usuarioActual?.let { user ->
                                         postViewModel.eliminarPost(post, user.id)
                                     }
                                 },
-                                esMio = esMio //Pasamos el permiso a la tarjeta
+
+                                onEdit = {
+                                    postParaEditar = post // Guardamos cuál editar
+
+                                },
+                                esMio = esMio
                             )
                         }
                     }
@@ -223,9 +231,14 @@ fun HomeScreenCompact(navController: NavController) {
             }
         }
 
-        if (mostrarDialogo) {
+        //logica del dialog
+        if (mostrarDialogo || postParaEditar != null) {
             AgregarPostDialog(
-                onDismiss = { mostrarDialogo = false },
+                onDismiss = {
+                    mostrarDialogo = false
+                    postParaEditar = null //Limpiamos selección al cerrar
+                },
+                postAEditar = postParaEditar, //Se lo pasamos al dialog para que se rellene solo
                 onAddPost = { titulo, contenido, categoria, _ ->
                     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -234,14 +247,25 @@ fun HomeScreenCompact(navController: NavController) {
                         @Suppress("DEPRECATION") vibrator.vibrate(150)
                     }
 
-                    //ENVIAMOS DATOS REALES DEL USUARIO
                     val autor = usuarioActual?.nombre ?: "Anónimo"
                     val idAutor = usuarioActual?.id ?: 0
 
-                    postViewModel.agregarPost(titulo, contenido, autor, categoria, idAutor)
+                    if (postParaEditar != null) {
+                        //modo edicion
+                        val postEditado = postParaEditar!!.copy(
+                            titulo = titulo,
+                            contenido = contenido,
+                            categoria = categoria
+                        )
+                        postViewModel.editarPost(postEditado)
+                    } else {
+                        //modo creacion
+                        postViewModel.agregarPost(titulo, contenido, autor, categoria, idAutor)
+                    }
 
                     publicadoOk = true
                     mostrarDialogo = false
+                    postParaEditar = null // Reset
                     fabExpandido = false
                 }
             )
@@ -250,7 +274,7 @@ fun HomeScreenCompact(navController: NavController) {
 }
 
 @Composable
-fun PostCard(post: Post, onDelete: () -> Unit, esMio: Boolean) {
+fun PostCard(post: Post, onDelete: () -> Unit, onEdit: () -> Unit, esMio: Boolean) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -296,21 +320,29 @@ fun PostCard(post: Post, onDelete: () -> Unit, esMio: Boolean) {
             Spacer(Modifier.height(10.dp))
             AssistChip(onClick = { }, label = { Text(post.categoria) })
             Spacer(Modifier.height(8.dp))
-            Divider()
+            HorizontalDivider() // Use HorizontalDivider si Divider está deprecado, o Divider() si no
             Spacer(Modifier.height(6.dp))
 
-            //SOLO MOSTRAMOS EL BOTÓN SI ES MÍO
+            //solo muestra si el post es mio
             if (esMio) {
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    //boton editar
+                    TextButton(
+                        onClick = { onEdit() }
+                    ) {
+                        Text("Editar")
+                    }
+
+                    //boton eliminar
                     TextButton(
                         onClick = { onDelete() }
                     ) {
                         Text(
                             "Eliminar",
-                            color = MaterialTheme.colorScheme.error // Rojo
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }
