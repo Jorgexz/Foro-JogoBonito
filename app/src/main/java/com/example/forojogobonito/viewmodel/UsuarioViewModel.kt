@@ -11,11 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class UsuarioViewModel : ViewModel() {
+class UsuarioViewModel(
+    private val repository: UsuarioRepository = UsuarioRepository()
+) : ViewModel() {
 
-    private val repository = UsuarioRepository()
 
-    //AQUÍ GUARDAMOS AL USUARIO LOGUEADO
+    //Aqui guardamos el usuario logueado
     var usuarioActual: Usuario? = null
         private set
 
@@ -49,11 +50,12 @@ class UsuarioViewModel : ViewModel() {
             esValido = false
         }
 
-        //Validar Correo (Usa el patrón nativo de Android)
+        //Validar Correo
         if (s.correo.isBlank()) {
             errorCorreo = "El correo es obligatorio"
             esValido = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(s.correo).matches()) {
+            //Regex (PC y Celular)
+        } else if (!Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$").matches(s.correo)) {
             errorCorreo = "Ingresa un correo válido (ej: nombre@gmail.com)"
             esValido = false
         }
@@ -74,7 +76,7 @@ class UsuarioViewModel : ViewModel() {
             esValido = false
         }
 
-        //Actualizamos el estado con los errores encontrados (si los hay)
+        //Actualizamos el estado con los errores encontrados
         _uiState.update {
             it.copy(
                 errores = it.errores.copy(
@@ -89,7 +91,7 @@ class UsuarioViewModel : ViewModel() {
         return esValido
     }
 
-    //NUEVA FUNCIÓN LOGIN REAL
+    //NUEVA FUNCION LOGIN REAL
     fun login(onSuccess: () -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
             try {

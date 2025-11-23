@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitInstance {
 
     //Usamos la IP pública de nuestra instancia AWS
-    private const val BASE_URL = "http://3.91.84.230:3001/"
+    private const val BASE_URL = "http://34.228.78.146:3001/"
 
     val api: ApiService by lazy {
         Retrofit.Builder()

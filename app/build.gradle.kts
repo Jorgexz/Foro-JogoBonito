@@ -87,7 +87,14 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    //Extra testing
+    testImplementation("junit:junit:4.13.2")//El estándar de pruebas
+    testImplementation("io.mockk:mockk:1.13.8")//Para simular el servidor (Mocking)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")//Para probar corrutinas (suspend)
+    testImplementation("androidx.arch.core:core-testing:2.2.0")//Para probar LiveData/StateFlow
 }
+
 
 
 

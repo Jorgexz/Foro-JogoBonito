@@ -11,9 +11,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class PostViewModel : ViewModel() {
 
-    private val repository = PostRepository()
+class PostViewModel(
+    private val repository: PostRepository = PostRepository()
+) : ViewModel() {
 
     private val _posts = MutableStateFlow<List<Post>>(emptyList())
     val posts: StateFlow<List<Post>> = _posts
