@@ -1,18 +1,23 @@
 package com.example.forojogobonito.ui.screen
 
-import androidx.compose.foundation.BorderStroke
+import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.forojogobonito.R
+import com.example.forojogobonito.viewmodel.UsuarioViewModel
 import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,6 +26,13 @@ fun LoginScreen(
     onNavigateToRegistro: () -> Unit,
     onNavigateToHome: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as ComponentActivity
+    val usuarioViewModel: UsuarioViewModel = viewModel(activity)
+    val uiState by usuarioViewModel.uiState.collectAsState()
+
+    var isLoading by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -38,55 +50,84 @@ fun LoginScreen(
         ) {
 
             Image(
-                painter = painterResource(id = R.drawable.pelotafutbol),
-                contentDescription = "Logo del foro",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                painter = painterResource(id = R.drawable.pelotafutbol), // Asegúrate de tener esta imagen
+                contentDescription = "Logo",
+                modifier = Modifier.size(120.dp)
             )
 
-
             Card(
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 modifier = Modifier.fillMaxWidth(0.9f)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 24.dp)
+                    modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
                         text = "Iniciar Sesión",
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Spacer(modifier = Modifier.height(24.dp))
-                    Button(
-                        onClick = onNavigateToHome,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { Text("Entrar al foro") }
+
+                    // CAMPO CORREO
+                    OutlinedTextField(
+                        value = uiState.correo,
+                        onValueChange = { usuarioViewModel.onCorreoChange(it) },
+                        label = { Text("Correo electrónico") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    )
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(
-                        onClick = onNavigateToRegistro,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color.White
-                        )
+
+                    // CAMPO CLAVE
+                    OutlinedTextField(
+                        value = uiState.clave,
+                        onValueChange = { usuarioViewModel.onClaveChange(it) },
+                        label = { Text("Contraseña") },
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // BOTÓN ENTRAR CONECTADO A AWS
+                    Button(
+                        onClick = {
+                            isLoading = true
+                            usuarioViewModel.login(
+                                onSuccess = {
+                                    isLoading = false
+                                    Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+                                    onNavigateToHome()
+                                },
+                                onError = {
+                                    isLoading = false
+                                    Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                                }
+                            )
+                        },
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                        } else {
+                            Text("Entrar al foro")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    TextButton(onClick = onNavigateToRegistro) {
                         Text("¿No tienes cuenta? Regístrate")
                     }
                 }
             }
 
-
-            Image(
-                painter = painterResource(id = R.drawable.ic_cornerflag),
-                contentDescription = "Bandera de córner",
-                modifier = Modifier
-                    .size(110.dp)
-            )
+            // Decoración (opcional)
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

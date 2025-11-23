@@ -1,11 +1,11 @@
 package com.example.forojogobonito.model
 
-
 data class Post(
-    val id: String = "",
-    val titulo: String = "",
-    val contenido: String = "",
-    val autorId: String = "",
-    val fechaPublicacion: String = "",
-    val comentarios: List<Comentario> = emptyList()
+    val id: Int? = null,
+    val titulo: String,
+    val contenido: String,
+    val autor: String,
+    val categoria: String,
+    val fecha: String,
+    val usuario_id: Int? = null
 )

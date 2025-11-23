@@ -6,7 +6,7 @@ import android.os.Vibrator
 import androidx.activity.ComponentActivity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi // ✅ Import necesario
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.forojogobonito.R
-import com.example.forojogobonito.data.Post
+import com.example.forojogobonito.model.Post
 import com.example.forojogobonito.navigation.AppNavigation
 import com.example.forojogobonito.viewmodel.PostViewModel
 import com.example.forojogobonito.viewmodel.UsuarioViewModel
@@ -42,14 +42,13 @@ fun HomeScreenCompact(navController: NavController) {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
+    //Obtenemos ViewModel de Usuario
     val usuarioViewModel: UsuarioViewModel = viewModel(activity)
-    val uiUsuario by usuarioViewModel.uiState.collectAsState()
 
-    val postViewModel: PostViewModel = viewModel(
-        factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory(
-            context.applicationContext as android.app.Application
-        )
-    )
+    //DATOS DEL USUARIO LOGUEADO
+    val usuarioActual = usuarioViewModel.usuarioActual
+
+    val postViewModel: PostViewModel = viewModel()
     val posts by postViewModel.posts.collectAsState()
 
     var mostrarDialogo by remember { mutableStateOf(false) }
@@ -88,11 +87,12 @@ fun HomeScreenCompact(navController: NavController) {
                 }
             )
         },
+
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
                     selected = true,
-                    onClick = { /* inicio */ },
+                    onClick = { },
                     label = { Text("Inicio") },
                     icon = {
                         Image(
@@ -102,6 +102,7 @@ fun HomeScreenCompact(navController: NavController) {
                         )
                     }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate(AppNavigation.Partidos.route) },
@@ -115,6 +116,7 @@ fun HomeScreenCompact(navController: NavController) {
                         )
                     }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate(AppNavigation.PerfilResumen.route) },
@@ -128,6 +130,7 @@ fun HomeScreenCompact(navController: NavController) {
                         )
                     }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = {
@@ -145,7 +148,9 @@ fun HomeScreenCompact(navController: NavController) {
                 )
             }
         },
+
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -184,22 +189,33 @@ fun HomeScreenCompact(navController: NavController) {
                 .padding(16.dp)
         ) {
             if (posts.isEmpty()) {
-                Text("No hay publicaciones aún. ¡Sé el primero en comentar!")
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No hay publicaciones aún. ¡Sé el primero en comentar!")
+                }
             } else {
 
-                // ✅ Aquí está la corrección
                 @OptIn(ExperimentalFoundationApi::class)
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
                         items = posts,
-                        key = { it.id }
+                        key = { it.id ?: (it.titulo + it.fecha).hashCode() }
                     ) { post ->
+
+                        //logica para ver si es mío el post
+                        val esMio = (post.usuario_id != null && post.usuario_id == usuarioActual?.id)
+
                         Box(Modifier.animateItemPlacement()) {
                             PostCard(
                                 post = post,
-                                onDelete = { postViewModel.eliminarPost(post) }
+                                onDelete = {
+                                    //Solo enviamos la orden si tenemos usuario válido
+                                    usuarioActual?.let { user ->
+                                        postViewModel.eliminarPost(post, user.id)
+                                    }
+                                },
+                                esMio = esMio //Pasamos el permiso a la tarjeta
                             )
                         }
                     }
@@ -210,7 +226,7 @@ fun HomeScreenCompact(navController: NavController) {
         if (mostrarDialogo) {
             AgregarPostDialog(
                 onDismiss = { mostrarDialogo = false },
-                onAddPost = { titulo, contenido, categoria, fecha ->
+                onAddPost = { titulo, contenido, categoria, _ ->
                     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                         vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -218,8 +234,12 @@ fun HomeScreenCompact(navController: NavController) {
                         @Suppress("DEPRECATION") vibrator.vibrate(150)
                     }
 
-                    val autor = uiUsuario.nombre.ifBlank { "Anónimo" }
-                    postViewModel.agregarPost(titulo, contenido, autor, categoria)
+                    //ENVIAMOS DATOS REALES DEL USUARIO
+                    val autor = usuarioActual?.nombre ?: "Anónimo"
+                    val idAutor = usuarioActual?.id ?: 0
+
+                    postViewModel.agregarPost(titulo, contenido, autor, categoria, idAutor)
+
                     publicadoOk = true
                     mostrarDialogo = false
                     fabExpandido = false
@@ -228,8 +248,9 @@ fun HomeScreenCompact(navController: NavController) {
         }
     }
 }
+
 @Composable
-fun PostCard(post: Post, onDelete: () -> Unit) {
+fun PostCard(post: Post, onDelete: () -> Unit, esMio: Boolean) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -277,9 +298,21 @@ fun PostCard(post: Post, onDelete: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Divider()
             Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-                TextButton(onClick = onDelete) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+
+            //SOLO MOSTRAMOS EL BOTÓN SI ES MÍO
+            if (esMio) {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(
+                        onClick = { onDelete() }
+                    ) {
+                        Text(
+                            "Eliminar",
+                            color = MaterialTheme.colorScheme.error // Rojo
+                        )
+                    }
                 }
             }
         }

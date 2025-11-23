@@ -42,19 +42,21 @@ fun AppNavGraph(navController: NavHostController) {
         }
 
 
-        // ✅ PERFIL (LEGACY) → redirigido a la pantalla estable con permiso persistente
+
         composable(AppNavigation.Perfil.route) {
             PerfilResumenScreen(navController = navController)
         }
 
-        // ✅ PERFIL (NUEVA RUTA) → misma pantalla estable
+
         composable(AppNavigation.PerfilResumen.route) {
             PerfilResumenScreen(navController = navController)
         }
+
+
     }
 }
 
-// Wrapper ya corregido en tu versión; lo dejo igual
+// Wrapper
 @Composable
 fun HomeScreenAdaptativaWrapper(navController: NavHostController) {
     HomeScreenAdaptativaWithLogout(

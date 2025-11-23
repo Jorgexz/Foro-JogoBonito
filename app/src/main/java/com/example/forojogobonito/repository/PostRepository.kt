@@ -1,16 +1,24 @@
 package com.example.forojogobonito.repository
 
-import com.example.forojogobonito.data.Post
-import com.example.forojogobonito.data.PostDao
-import kotlinx.coroutines.flow.Flow
+import com.example.forojogobonito.data.remote.RetrofitInstance
+import com.example.forojogobonito.model.Post
 
-class PostRepository(private val postDao: PostDao) {
+class PostRepository {
 
-    val posts: Flow<List<Post>> = postDao.obtenerPosts()
+    suspend fun obtenerPosts(): List<Post> {
+        return RetrofitInstance.api.getPosts()
+    }
 
-    suspend fun insertar(post: Post) = postDao.insertarPost(post)
+    suspend fun crearPost(post: Post): Post {
+        // El post ya viene con el usuario_id dentro desde el ViewModel
+        return RetrofitInstance.api.crearPost(post)
+    }
 
-    suspend fun actualizar(post: Post) = postDao.actualizarPost(post)
-
-    suspend fun eliminar(post: Post) = postDao.eliminarPost(post)
+    // AHORA RECIBE 2 IDs: El del post y el del usuario que quiere borrar
+    suspend fun eliminarPost(idPost: Int, idUsuario: Int) {
+        val response = RetrofitInstance.api.eliminarPost(idPost, idUsuario)
+        if (!response.isSuccessful) {
+            throw Exception("Error al borrar: ${response.code()} (Posiblemente no eres el dueño)")
+        }
+    }
 }

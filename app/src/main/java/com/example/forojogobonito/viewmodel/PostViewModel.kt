@@ -1,61 +1,70 @@
 package com.example.forojogobonito.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.forojogobonito.data.AppDatabase
-import com.example.forojogobonito.data.Post
+import com.example.forojogobonito.model.Post
 import com.example.forojogobonito.repository.PostRepository
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-import java.time.LocalDate
+class PostViewModel : ViewModel() {
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = PostRepository()
 
-    private val repository: PostRepository
+    private val _posts = MutableStateFlow<List<Post>>(emptyList())
+    val posts: StateFlow<List<Post>> = _posts
 
-    val posts: StateFlow<List<Post>>
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     init {
-        val dao = AppDatabase.getDatabase(application).postDao()
-        repository = PostRepository(dao)
-        posts = repository.posts.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+        cargarPosts()
     }
 
-    fun agregarPost(titulo: String, contenido: String, autor: String, categoria: String) {
+    fun cargarPosts() {
         viewModelScope.launch {
-            val fecha = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            try {
+                _posts.value = repository.obtenerPosts()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun agregarPost(titulo: String, contenido: String, autor: String, categoria: String, usuarioId: Int) {
+        viewModelScope.launch {
+            val fecha = dateFormat.format(Date())
             val nuevoPost = Post(
                 titulo = titulo,
                 contenido = contenido,
                 autor = autor,
                 categoria = categoria,
-                fecha = fecha
+                fecha = fecha,
+                usuario_id = usuarioId // 👈 IMPORTANTE
             )
-            repository.insertar(nuevoPost)
+            try {
+                repository.crearPost(nuevoPost)
+                cargarPosts()
+            } catch (e: Exception) { e.printStackTrace() }
         }
     }
 
-
-    fun eliminarPost(post: Post) {
+    fun eliminarPost(post: Post, usuarioIdActual: Int) {
         viewModelScope.launch {
-            repository.eliminar(post)
-        }
-    }
-
-    fun actualizarPost(post: Post) {
-        viewModelScope.launch {
-            repository.actualizar(post)
+            try {
+                post.id?.let { idPost ->
+                    // Enviamos mi ID para demostrar que soy el dueño
+                    repository.eliminarPost(idPost, usuarioIdActual)
+                    cargarPosts()
+                }
+            } catch (e: Exception) {
+                println("No se pudo borrar: ${e.message}")
+            }
         }
     }
 }
+

@@ -1,8 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)   // 👈 Obligatorio con Kotlin 2.0
-    alias(libs.plugins.ksp)              // 👈 Usaremos KSP (no KAPT)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -28,11 +27,11 @@ android {
         }
     }
 
-    // ✅ Necesario para Compose
+    //Necesario para Compose
     buildFeatures {
         compose = true
     }
-    // ❌ Con Kotlin 2.0 + plugin compose NO uses composeOptions{}
+    //Con Kotlin 2.0
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -64,13 +63,19 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+
     // Imágenes
     implementation("io.coil-kt:coil-compose:2.4.0")
 
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+
     implementation("androidx.compose.foundation:foundation")
 
     // Dev tools
@@ -85,12 +90,6 @@ dependencies {
 }
 
 
-ksp {
-    // carpeta donde Room guardará los JSON de esquema
-    arg("room.schemaLocation", "$projectDir/schemas")
-    // opcional: para tener nombres de clases más “limpios”
-    arg("room.incremental", "true")
-    arg("room.expandProjection", "true")
-}
+
 
 
