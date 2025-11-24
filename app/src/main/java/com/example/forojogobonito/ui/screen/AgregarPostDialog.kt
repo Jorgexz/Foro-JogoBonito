@@ -5,7 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.forojogobonito.model.Post // 👈 Asegúrate de importar tu modelo Post
+import com.example.forojogobonito.model.Post //Asegúrate de importar tu modelo Post
 import java.text.SimpleDateFormat
 import java.util.*
 
