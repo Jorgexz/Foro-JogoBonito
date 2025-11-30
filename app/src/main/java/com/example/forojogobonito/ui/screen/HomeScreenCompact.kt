@@ -207,23 +207,28 @@ fun HomeScreenCompact(navController: NavController) {
                         key = { it.id ?: (it.titulo + it.fecha).hashCode() }
                     ) { post ->
 
-                        //logica para ver si es mío el post
+                        // ... dentro de items(posts) ...
+
+                        // LÓGICA DE ADMIN
                         val esMio = (post.usuario_id != null && post.usuario_id == usuarioActual?.id)
+                        val soyAdmin = usuarioActual?.rol == "admin"
+
+                        // ¿Tengo permiso para borrar? (Si es mío o soy admin)
+                        val tengoPermisos = esMio || soyAdmin
 
                         Box(Modifier.animateItemPlacement()) {
                             PostCard(
                                 post = post,
                                 onDelete = {
                                     usuarioActual?.let { user ->
+                                        // Al borrar, el backend verificará si tienes permiso real
                                         postViewModel.eliminarPost(post, user.id)
                                     }
                                 },
-
                                 onEdit = {
-                                    postParaEditar = post // Guardamos cuál editar
-
+                                    postParaEditar = post
                                 },
-                                esMio = esMio
+                                esMio = tengoPermisos // 👈 AQUÍ PASAMOS EL SUPERPODER
                             )
                         }
                     }

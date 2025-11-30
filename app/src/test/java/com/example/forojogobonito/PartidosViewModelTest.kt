@@ -12,11 +12,14 @@ import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -31,52 +34,46 @@ class PartidosViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        //Mockeamos el objeto Object de Retrofit
+        // Mockeamos el Singleton de Retrofit
         mockkObject(ExternalRetrofitInstance)
         coEvery { ExternalRetrofitInstance.api } returns apiMock
     }
 
     @After
     fun tearDown() {
-        unmockkAll() // Limpiamos los mocks
+        unmockkAll() // Importante liberar el objeto estático
         Dispatchers.resetMain()
     }
 
     @Test
-    fun `cargarPartidos obtiene lista exitosamente`() = runTest {
-        //La API externa responde con 1 partido del Chelsea
-        val partidoPrueba = Partido(
-            id = "1",
-            nombrePartido = "Chelsea vs Arsenal",
-            fecha = "2025-12-01",
-            hora = "15:00",
-            liga = "Premier League",
-            imagenUrl = null
-        )
-        val respuestaFalsa = PartidosResponse(eventos = listOf(partidoPrueba))
+    fun `cargarPartidos llena la lista correctamente`() = runTest {
+        // GIVEN
+        val partido = Partido("1", "Chelsea vs Arsenal", "2025-01-01", "15:00", "Premier", null)
+        val respuesta = PartidosResponse(listOf(partido))
 
-        //enseñamos al mock a devolver esa respuesta
-        coEvery { apiMock.getProximosPartidos() } returns respuestaFalsa
+        coEvery { apiMock.getProximosPartidos() } returns respuesta
 
-        //iniciamos el ViewModel que llama a cargarPartidos en el init
-        viewModel = PartidosViewModel()
-        testDispatcher.scheduler.advanceUntilIdle() //Esperamos a que termine la corrutina
+        // WHEN
+        viewModel = PartidosViewModel() // Al iniciar llama a cargarPartidos
+        advanceUntilIdle()
 
-        //entonces la lista del ViewModel debe tener 1 partido
+        // THEN
+        assertFalse(viewModel.isLoading.value) // Ya no carga
         assertEquals(1, viewModel.partidos.value.size)
         assertEquals("Chelsea vs Arsenal", viewModel.partidos.value[0].nombrePartido)
     }
 
     @Test
-    fun `cargarPartidos maneja errores y deja lista vacia`() = runTest {
-        //la API falla y lanza una excepción
-        coEvery { apiMock.getProximosPartidos() } throws Exception("Error de API")
+    fun `cargarPartidos maneja error y deja lista vacia`() = runTest {
+        // GIVEN
+        coEvery { apiMock.getProximosPartidos() } throws Exception("API Caída")
 
-        //when
+        // WHEN
         viewModel = PartidosViewModel()
-        testDispatcher.scheduler.advanceUntilIdle()
+        advanceUntilIdle()
 
-        //entonces la lista debe estar vacía (no crashea)
-        assertEquals(0, viewModel.partidos.value.size)
+        // THEN
+        assertTrue(viewModel.partidos.value.isEmpty())
+        assertFalse(viewModel.isLoading.value)
     }
 }

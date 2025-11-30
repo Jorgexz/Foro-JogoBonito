@@ -6,5 +6,6 @@ data class Usuario(
     val correo: String,
     val clave: String,
     val edad: Int? = null,        // Coincide con tu DB
-    val imagen_url: String? = null
+    val imagen_url: String? = null,
+    val rol: String = "user"
 )
