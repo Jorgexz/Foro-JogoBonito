@@ -61,7 +61,7 @@ fun AgregarPostDialog(
                     onValueChange = { contenido = it },
                     label = { Text("Contenido") },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 5 // Un poco más de espacio para escribir
+                    maxLines = 5
                 )
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(

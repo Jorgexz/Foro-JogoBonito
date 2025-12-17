@@ -23,7 +23,7 @@ class UsuarioViewModel(
     private val _uiState = MutableStateFlow(UsuarioUiState())
     val uiState: StateFlow<UsuarioUiState> = _uiState
 
-    // ... (Tus funciones onNombreChange, etc. déjalas igual) ...
+
     fun onNombreChange(nuevo: String) = _uiState.update { it.copy(nombre = nuevo) }
     fun onCorreoChange(nuevo: String) = _uiState.update { it.copy(correo = nuevo) }
     fun onClaveChange(nuevo: String) = _uiState.update { it.copy(clave = nuevo) }
@@ -91,7 +91,7 @@ class UsuarioViewModel(
         return esValido
     }
 
-    //NUEVA FUNCION LOGIN REAL
+    //FUNCION LOGIN
     fun login(onSuccess: () -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
             try {
@@ -99,7 +99,7 @@ class UsuarioViewModel(
                 val clave = _uiState.value.clave
                 val usuarioRecibido = repository.login(correo, clave)
 
-                // ¡Éxito! Guardamos al usuario en memoria
+                //Guardamos al usuario en memoria
                 usuarioActual = usuarioRecibido
 
                 // Actualizamos la UI con el nombre real

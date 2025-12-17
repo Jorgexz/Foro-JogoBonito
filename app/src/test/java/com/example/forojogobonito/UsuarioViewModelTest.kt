@@ -168,9 +168,9 @@ class UsuarioViewModelTest {
         assertTrue(errorCalled)
     }
 
-    // ==========================================
+    
     // 4. TESTS DE REGISTRO (ASINCRONO)
-    // ==========================================
+
 
     @Test
     fun `registrarUsuario exitoso actualiza usuario y llama onSuccess`() = runTest {

@@ -45,7 +45,7 @@ class PostViewModel(
                 autor = autor,
                 categoria = categoria,
                 fecha = fecha,
-                usuario_id = usuarioId // 👈 IMPORTANTE
+                usuario_id = usuarioId
             )
             try {
                 repository.crearPost(nuevoPost)

@@ -1,12 +1,12 @@
 package com.example.forojogobonito.ui.screen
 
 import android.content.Context
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.*
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,12 +16,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -33,79 +34,80 @@ import androidx.navigation.NavController
 import com.example.forojogobonito.R
 import com.example.forojogobonito.model.Post
 import com.example.forojogobonito.navigation.AppNavigation
+import com.example.forojogobonito.viewmodel.FavoritosViewModel
 import com.example.forojogobonito.viewmodel.PostViewModel
 import com.example.forojogobonito.viewmodel.UsuarioViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreenCompact(navController: NavController) {
+fun HomeScreenCompact(
+    navController: NavController,
+    onLogout: () -> Unit
+) {
     val context = LocalContext.current
     val activity = context as ComponentActivity
 
-    //obtenemos ViewModel de Usuario
+    // ViewModels
+    val postViewModel: PostViewModel = viewModel(activity)
     val usuarioViewModel: UsuarioViewModel = viewModel(activity)
-    //datos usuario ya logueado
-    val usuarioActual = usuarioViewModel.usuarioActual
+    val favoritosViewModel: FavoritosViewModel = viewModel(activity)
 
-    val postViewModel: PostViewModel = viewModel()
     val posts by postViewModel.posts.collectAsState()
+    val currentUser = usuarioViewModel.usuarioActual
 
-    //estados UI
-    var mostrarDialogo by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var postAEditar by remember { mutableStateOf<Post?>(null) }
 
-    var postParaEditar by remember { mutableStateOf<Post?>(null) }
-
-    var publicadoOk by remember { mutableStateOf(false) }
-    var fabExpandido by remember { mutableStateOf(false) }
-    val rot by animateFloatAsState(if (fabExpandido) 45f else 0f, label = "fab-rotation")
-
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(publicadoOk) {
-        if (publicadoOk) {
-            kotlinx.coroutines.delay(1600)
-            publicadoOk = false
-        }
-    }
+    // COLOR CORPORATIVO
+    val JogaBonitoColor = Color(0xFF01494F)
 
     Scaffold(
         topBar = {
-            val LOGO_SIZE = 72.dp
-            LargeTopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("Foro Jogabonito", style = MaterialTheme.typography.headlineLarge)
-                            Spacer(Modifier.height(6.dp))
-                            Image(
-                                painter = painterResource(id = R.drawable.pelotafutbol),
-                                contentDescription = "Logo del foro",
-                                modifier = Modifier.size(LOGO_SIZE)
-                            )
-                        }
+                    Text(
+                        "Foro JogaBonito",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = Color.White,
+                    actionIconContentColor = Color.White
+                ),
+                actions = {
+                    IconButton(onClick = { navController.navigate(AppNavigation.Favoritos.route) }) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = "Ver Favoritos",
+                            tint = Color.White
+                        )
                     }
                 }
             )
         },
-
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ) {
+                // 1. INICIO
                 NavigationBarItem(
                     selected = true,
-                    onClick = { },
+                    onClick = { /* Ya estamos aquí */ },
                     label = { Text("Inicio") },
                     icon = {
-                        Image(
+                        Icon(
                             painter = painterResource(id = R.drawable.cancha),
                             contentDescription = "Inicio",
-                            modifier = Modifier.size(32.dp).padding(2.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Unspecified
                         )
                     }
                 )
 
+                // 2. PARTIDOS
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate(AppNavigation.Partidos.route) },
@@ -114,164 +116,127 @@ fun HomeScreenCompact(navController: NavController) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_vs),
                             contentDescription = "Partidos",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(28.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Unspecified
                         )
                     }
                 )
 
+                // 3. PERFIL
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate(AppNavigation.PerfilResumen.route) },
                     label = { Text("Perfil") },
                     icon = {
                         Icon(
-                            painter = painterResource(R.drawable.ic_perfil),
+                            painter = painterResource(id = R.drawable.ic_perfil),
                             contentDescription = "Perfil",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(24.dp),
+                            tint = Color.Unspecified
                         )
                     }
                 )
 
+                // 4. SALIR
                 NavigationBarItem(
                     selected = false,
-                    onClick = {
-                        navController.navigate(AppNavigation.Login.route) {
-                            popUpTo(AppNavigation.Home.route) { inclusive = true }
-                        }
-                    },
+                    onClick = onLogout,
                     label = { Text("Salir") },
                     icon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = "Salir"
+                            Icons.AutoMirrored.Filled.ExitToApp,
+                            contentDescription = "Salir",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 )
             }
         },
-
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    fabExpandido = !fabExpandido
-                    mostrarDialogo = true
-                    postParaEditar = null // Aseguramos que es un post NUEVO
-                }
+                    postAEditar = null
+                    showDialog = true
+                },
+                containerColor = JogaBonitoColor,
+                contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.rotate(rot))
+                Icon(Icons.Default.Add, contentDescription = "Nuevo Post")
             }
         }
-    ) { paddingValues ->
-
-        AnimatedVisibility(
-            visible = publicadoOk,
-            enter = slideInVertically { -it } + fadeIn(),
-            exit = slideOutVertically { -it } + fadeOut(),
-        ) {
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                tonalElevation = 3.dp,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    "¡Operación exitosa!",
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        }
-
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
+                .padding(padding)
         ) {
             if (posts.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No hay publicaciones aún. ¡Sé el primero en comentar!")
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = JogaBonitoColor)
                 }
             } else {
-
-                @OptIn(ExperimentalFoundationApi::class)
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(
-                        items = posts,
-                        key = { it.id ?: (it.titulo + it.fecha).hashCode() }
-                    ) { post ->
+                    items(posts) { post ->
+                        val esMio = (post.usuario_id == currentUser?.id)
+                        val soyAdmin = (currentUser?.rol == "admin")
+                        val puedoBorrar = esMio || soyAdmin
 
-                        // ... dentro de items(posts) ...
-
-                        // LÓGICA DE ADMIN
-                        val esMio = (post.usuario_id != null && post.usuario_id == usuarioActual?.id)
-                        val soyAdmin = usuarioActual?.rol == "admin"
-
-                        // ¿Tengo permiso para borrar? (Si es mío o soy admin)
-                        val tengoPermisos = esMio || soyAdmin
-
-                        Box(Modifier.animateItemPlacement()) {
-                            PostCard(
-                                post = post,
-                                onDelete = {
-                                    usuarioActual?.let { user ->
-                                        // Al borrar, el backend verificará si tienes permiso real
-                                        postViewModel.eliminarPost(post, user.id)
-                                    }
-                                },
-                                onEdit = {
-                                    postParaEditar = post
-                                },
-                                esMio = tengoPermisos // 👈 AQUÍ PASAMOS EL SUPERPODER
-                            )
-                        }
+                        PostCard(
+                            post = post,
+                            esMio = esMio,
+                            puedoBorrar = puedoBorrar,
+                            accentColor = JogaBonitoColor,
+                            onEdit = {
+                                postAEditar = post
+                                showDialog = true
+                            },
+                            onDelete = {
+                                postViewModel.eliminarPost(post, currentUser?.id ?: 0)
+                            },
+                            onFav = {
+                                favoritosViewModel.guardarEnFavoritos(post)
+                                Toast.makeText(context, "Guardado en Favoritos Offline", Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 }
             }
         }
 
-        //logica del dialog
-        if (mostrarDialogo || postParaEditar != null) {
+        if (showDialog) {
             AgregarPostDialog(
-                onDismiss = {
-                    mostrarDialogo = false
-                    postParaEditar = null //Limpiamos selección al cerrar
-                },
-                postAEditar = postParaEditar, //Se lo pasamos al dialog para que se rellene solo
-                onAddPost = { titulo, contenido, categoria, _ ->
+                onDismiss = { showDialog = false },
+                postAEditar = postAEditar,
+                onAddPost = { titulo, contenido, categoria, fecha ->
+
+                    //RECURSO NATIVO VIBRACIÓN
                     val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
-                    } else {
-                        @Suppress("DEPRECATION") vibrator.vibrate(150)
+                    if (vibrator.hasVibrator()) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE))
+                        } else {
+                            @Suppress("DEPRECATION")
+                            vibrator.vibrate(100)
+                        }
                     }
 
-                    val autor = usuarioActual?.nombre ?: "Anónimo"
-                    val idAutor = usuarioActual?.id ?: 0
 
-                    if (postParaEditar != null) {
-                        //modo edicion
-                        val postEditado = postParaEditar!!.copy(
+                    val userId = currentUser?.id ?: 0
+                    if (postAEditar == null) {
+                        postViewModel.agregarPost(titulo, contenido, currentUser?.nombre ?: "Anon", categoria, userId)
+                    } else {
+                        val postEditado = postAEditar!!.copy(
                             titulo = titulo,
                             contenido = contenido,
-                            categoria = categoria
+                            categoria = categoria,
+                            fecha = fecha
                         )
                         postViewModel.editarPost(postEditado)
-                    } else {
-                        //modo creacion
-                        postViewModel.agregarPost(titulo, contenido, autor, categoria, idAutor)
                     }
-
-                    publicadoOk = true
-                    mostrarDialogo = false
-                    postParaEditar = null // Reset
-                    fabExpandido = false
+                    showDialog = false
                 }
             )
         }
@@ -279,36 +244,42 @@ fun HomeScreenCompact(navController: NavController) {
 }
 
 @Composable
-fun PostCard(post: Post, onDelete: () -> Unit, onEdit: () -> Unit, esMio: Boolean) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth()
+fun PostCard(
+    post: Post,
+    esMio: Boolean,
+    puedoBorrar: Boolean,
+    accentColor: Color,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onFav: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                val inicial = (post.autor.firstOrNull() ?: '•').uppercaseChar().toString()
-                Box(
+                // Avatar
+                Image(
+                    painter = painterResource(id = R.drawable.ic_perfil),
+                    contentDescription = "Avatar",
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = inicial,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black)
-                    )
-                }
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                )
+                Spacer(Modifier.width(8.dp))
+                Column {
                     Text(
                         text = post.titulo,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
-                    Spacer(Modifier.height(2.dp))
                     Text(
-                        text = "por ${post.autor} • ${post.fecha}",
+                        text = "Por ${post.autor} • ${post.fecha}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -323,32 +294,52 @@ fun PostCard(post: Post, onDelete: () -> Unit, onEdit: () -> Unit, esMio: Boolea
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(Modifier.height(10.dp))
-            AssistChip(onClick = { }, label = { Text(post.categoria) })
+
+            // Categoria: Fondo Verde, Letra Blanca
+            AssistChip(
+                onClick = { },
+                label = {
+                    Text(
+                        post.categoria,
+                        color = Color.White
+                    )
+                },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = accentColor,
+                    labelColor = Color.White
+                ),
+                border = BorderStroke(1.dp, accentColor)
+            )
+
             Spacer(Modifier.height(8.dp))
-            HorizontalDivider() // Use HorizontalDivider si Divider está deprecado, o Divider() si no
+            HorizontalDivider()
             Spacer(Modifier.height(6.dp))
 
-            //solo muestra si el post es mio
-            if (esMio) {
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    //boton editar
-                    TextButton(
-                        onClick = { onEdit() }
-                    ) {
-                        Text("Editar")
-                    }
+            // BARRA DE ACCIONES
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onFav) {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = "Guardar Favorito",
+                        tint = accentColor
+                    )
+                }
 
-                    //boton eliminar
-                    TextButton(
-                        onClick = { onDelete() }
-                    ) {
-                        Text(
-                            "Eliminar",
-                            color = MaterialTheme.colorScheme.error
-                        )
+                if (esMio || puedoBorrar) {
+                    Row {
+                        if (esMio) {
+                            TextButton(onClick = onEdit) {
+                                Text("Editar", color = accentColor)
+                            }
+                        }
+
+                        TextButton(onClick = onDelete) {
+                            Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }

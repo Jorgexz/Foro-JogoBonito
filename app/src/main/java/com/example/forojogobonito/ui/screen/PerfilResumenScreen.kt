@@ -73,7 +73,7 @@ fun PerfilResumenScreen(
                 )
             } else {
                 Image(
-                    painter = painterResource(id = R.drawable.pelotafutbol),
+                    painter = painterResource(id = R.drawable.ic_perfil),
                     contentDescription = "Foto por defecto",
                     modifier = Modifier.size(140.dp).clip(CircleShape),
                     contentScale = ContentScale.Crop
@@ -84,7 +84,7 @@ fun PerfilResumenScreen(
             OutlinedButton(
                 onClick = { galeriaLauncher.launch(arrayOf("image/*")) },
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.White      // 👈 texto blanco
+                    contentColor = Color.White
                 )
             ) {
                 Text("Cambiar foto")

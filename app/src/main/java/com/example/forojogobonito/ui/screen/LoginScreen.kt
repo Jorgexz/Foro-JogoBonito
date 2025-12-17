@@ -92,7 +92,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // BOTÓN ENTRAR CONECTADO A AWS
+                    // Boton para hacer Login
                     Button(
                         onClick = {
                             isLoading = true
@@ -104,7 +104,7 @@ fun LoginScreen(
                                 },
                                 onError = {
                                     isLoading = false
-                                    Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "Credenciales incorrectas o Error de Conexion", Toast.LENGTH_LONG).show()
                                 }
                             )
                         },

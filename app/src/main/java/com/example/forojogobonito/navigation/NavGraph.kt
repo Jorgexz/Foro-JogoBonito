@@ -29,41 +29,29 @@ fun AppNavGraph(navController: NavHostController) {
             RegistroScreen(navController = navController)
         }
 
-        // Home Adaptativa (con logout)
+        // Home
         composable(AppNavigation.Home.route) {
             HomeScreenAdaptativaWrapper(navController)
         }
 
-
-
+        // Partidos
         composable(AppNavigation.Partidos.route) {
             PartidosScreen(navController)
         }
 
-
-
+        // Perfil
         composable(AppNavigation.Perfil.route) {
             PerfilResumenScreen(navController = navController)
         }
-
 
         composable(AppNavigation.PerfilResumen.route) {
             PerfilResumenScreen(navController = navController)
         }
 
-
+        // Favoritos
+        composable(AppNavigation.Favoritos.route) {
+            FavoritosScreen(navController)
+        }
     }
 }
 
-// Wrapper
-@Composable
-fun HomeScreenAdaptativaWrapper(navController: NavHostController) {
-    HomeScreenAdaptativaWithLogout(
-        navController = navController,
-        onLogout = {
-            navController.navigate(AppNavigation.Login.route) {
-                popUpTo(AppNavigation.Home.route) { inclusive = true }
-            }
-        }
-    )
-}
